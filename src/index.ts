@@ -17,6 +17,19 @@ function handlerNumberRequests(req: Request, res: Response) {
   res.send(`Hits: ${config.fileserverHits}`);
 }
 
+function handlerAdminMetrics(req: Request, res: Response) {
+  const html = '';
+  res.set('content-type', 'text/html; charset=utf-8');
+  res.send(
+    `<html>
+      <body>
+        <h1>Welcome, Chirpy Admin</h1>
+        <p>Chirpy has been visited ${config.fileserverHits} times!</p>
+      </body>
+    </html>`
+  );
+}
+
 function handlerResetMetrics(req: Request, res: Response) {
   res.set('content-type', 'text/plain');
   res.send('OK');
@@ -43,9 +56,9 @@ function middlewareLogResponses(
   next();
 }
 
-app.get('/healthz', handlerReadiness);
-app.get('/reset', handlerResetMetrics);
-app.get('/metrics', handlerNumberRequests);
+app.get('/api/healthz', handlerReadiness);
+app.get('/admin/reset', handlerResetMetrics);
+app.get('/admin/metrics', handlerAdminMetrics);
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
