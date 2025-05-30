@@ -1,20 +1,18 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { config } from './config.js';
+import { middlewareLogResponses, middlewareMetricsInc } from './middleware.js';
+import { replaceProfaneWords } from './utils/profanity.js';
 
 const app = express();
 const PORT = 8080;
 
+app.use(express.json());
 app.use(middlewareLogResponses);
 app.use('/app', middlewareMetricsInc, express.static('./src/app'));
 
 function handlerReadiness(req: Request, res: Response) {
   res.set('content-type', 'text/plain; charset=utf-8');
   res.send('OK');
-}
-
-function handlerNumberRequests(req: Request, res: Response) {
-  res.set('content-type', 'text/plain');
-  res.send(`Hits: ${config.fileserverHits}`);
 }
 
 function handlerAdminMetrics(req: Request, res: Response) {
@@ -36,28 +34,27 @@ function handlerResetMetrics(req: Request, res: Response) {
   config.fileserverHits = 0;
 }
 
-function middlewareMetricsInc(req: Request, res: Response, next: NextFunction) {
-  config.fileserverHits++;
-  next();
+function handlerValidateChirp(req: Request, res: Response) {
+  type parameters = {
+    body: string;
+  };
+
+  const params: parameters = req.body;
+
+  if (params.body.length > 140) {
+    res.status(400).send({ error: 'Chirp is too long' });
+  } else {
+    const replaced = replaceProfaneWords(params.body);
+    res.status(200).send({ cleanedBody: replaced });
+  }
 }
 
-function middlewareLogResponses(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  res.on('finish', () => {
-    if (res.statusCode >= 400) {
-      console.log(
-        `[NON-OK] ${req.method} ${req.url} - Status: ${res.statusCode}`
-      );
-    }
-  });
-  next();
-}
-
+// API
 app.get('/api/healthz', handlerReadiness);
-app.get('/admin/reset', handlerResetMetrics);
+app.post('/api/validate_chirp', handlerValidateChirp);
+
+// ADMIN
+app.post('/admin/reset', handlerResetMetrics);
 app.get('/admin/metrics', handlerAdminMetrics);
 
 app.listen(PORT, () => {
