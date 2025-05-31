@@ -7,7 +7,9 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/index.js",
-    "dev": "npx tsc && node dist/index.js"
+    "dev": "npx tsc && node dist/index.js",
+    "gen": "npx drizzle-kit generate",
+    "mig": "npx drizzle-kit migrate"
   },
   "keywords": [],
   "author": "",
@@ -15,9 +17,12 @@
   "devDependencies": {
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.23",
+    "drizzle-kit": "^0.31.1",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "express": "^5.1.0"
+    "drizzle-orm": "^0.44.0",
+    "express": "^5.1.0",
+    "postgres": "^3.4.7"
   }
 }
