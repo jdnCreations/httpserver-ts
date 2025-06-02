@@ -5,8 +5,8 @@ import {
   ConflictError,
   UnauthorizedError,
 } from '../errors.js';
-import { checkPasswordHash, hashPassword } from '../auth/auth.js';
-import { NewUser } from 'src/db/schema.js';
+import { checkPasswordHash, hashPassword, makeJWT } from '../auth/auth.js';
+import { config } from '../config.js';
 
 function validEmail(email: string): boolean {
   const emailRegex = /[\w-\.]+@([\w-]+\.)[\w-]{2, 4}$/;
@@ -53,9 +53,8 @@ export async function handlerLogin(req: Request, res: Response) {
   type parameters = {
     password: string;
     email: string;
+    expiresInSeconds?: number;
   };
-
-  type UserResponse = Omit<NewUser, 'hashedPassword'>;
 
   const params: parameters = req.body;
 
@@ -65,14 +64,22 @@ export async function handlerLogin(req: Request, res: Response) {
       throw new UnauthorizedError('incorrect email or password');
     }
     const match = await checkPasswordHash(params.password, user.hashedPassword);
-    let userResponse: UserResponse = {
-      id: user.id,
-      email: user.email,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
 
     if (match) {
+      let expiresInTime = 60 * 60 * 60;
+
+      // if expiresInSeconds provided and it's less than 1 hour, use that time
+      if (params.expiresInSeconds && params.expiresInSeconds < expiresInTime) {
+        expiresInTime = params.expiresInSeconds;
+      }
+      const token = makeJWT(user.id, expiresInTime, config.secret);
+      let userResponse = {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        token: token,
+      };
       res.status(200).json(userResponse);
     } else {
       throw new UnauthorizedError('incorrect email or password');
