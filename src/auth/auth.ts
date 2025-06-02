@@ -3,6 +3,8 @@ import { compare, genSaltSync, hash } from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from '../errors.js';
 import { Request } from 'express';
+import crypto from 'node:crypto';
+import { createRefreshToken } from '../db/queries/refresh_tokens.js';
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = genSaltSync(10);
@@ -61,4 +63,10 @@ export function getBearerToken(req: Request): string {
   const auth = req.get('authorization');
   const bearer = auth?.replace('Bearer ', '');
   return bearer || '';
+}
+
+export function makeRefreshToken(userId: string): string {
+  const token = crypto.randomBytes(32).toString('hex');
+  createRefreshToken(token, userId);
+  return token;
 }

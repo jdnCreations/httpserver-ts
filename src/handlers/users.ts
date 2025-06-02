@@ -5,7 +5,12 @@ import {
   ConflictError,
   UnauthorizedError,
 } from '../errors.js';
-import { checkPasswordHash, hashPassword, makeJWT } from '../auth/auth.js';
+import {
+  checkPasswordHash,
+  hashPassword,
+  makeJWT,
+  makeRefreshToken,
+} from '../auth/auth.js';
 import { config } from '../config.js';
 
 function validEmail(email: string): boolean {
@@ -53,7 +58,6 @@ export async function handlerLogin(req: Request, res: Response) {
   type parameters = {
     password: string;
     email: string;
-    expiresInSeconds?: number;
   };
 
   const params: parameters = req.body;
@@ -66,19 +70,17 @@ export async function handlerLogin(req: Request, res: Response) {
     const match = await checkPasswordHash(params.password, user.hashedPassword);
 
     if (match) {
-      let expiresInTime = 60 * 60 * 60;
+      const hour = 60 * 60 * 1000;
 
-      // if expiresInSeconds provided and it's less than 1 hour, use that time
-      if (params.expiresInSeconds && params.expiresInSeconds < expiresInTime) {
-        expiresInTime = params.expiresInSeconds;
-      }
-      const token = makeJWT(user.id, expiresInTime, config.secret);
+      const accessToken = makeJWT(user.id, hour, config.secret);
+      const refreshToken = makeRefreshToken(user.id);
       let userResponse = {
         id: user.id,
         email: user.email,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        token: token,
+        token: accessToken,
+        refreshToken: refreshToken,
       };
       res.status(200).json(userResponse);
     } else {

@@ -16,6 +16,8 @@ import {
 } from './handlers/chirps.js';
 import { handlerReadiness } from './handlers/health.js';
 import { handlerCreateUser, handlerLogin } from './handlers/users.js';
+import { handlerRevokeRefreshToken } from './handlers/refresh_tokens.js';
+import { handlerRefresh } from './handlers/access_tokens.js';
 
 const app = express();
 const PORT = 8080;
@@ -56,6 +58,14 @@ app.post('/api/users', (req, res, next) => {
 });
 app.post('/api/login', (req, res, next) => {
   Promise.resolve(handlerLogin(req, res)).catch(next);
+});
+
+// TOKENS
+app.post('/api/refresh', (req, res, next) => {
+  Promise.resolve(handlerRefresh(req, res)).catch(next);
+});
+app.post('/api/revoke', (req, res, next) => {
+  Promise.resolve(handlerRevokeRefreshToken(req, res)).catch(next);
 });
 
 app.use(middlewareHandleErrors);
