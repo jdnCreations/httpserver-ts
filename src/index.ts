@@ -15,7 +15,7 @@ import {
   handlerGetChirps,
 } from './handlers/chirps.js';
 import { handlerReadiness } from './handlers/health.js';
-import { handlerCreateUser } from './handlers/users.js';
+import { handlerCreateUser, handlerLogin } from './handlers/users.js';
 
 const app = express();
 const PORT = 8080;
@@ -54,6 +54,11 @@ app.get('/admin/metrics', (req, res, next) => {
 app.post('/api/users', (req, res, next) => {
   Promise.resolve(handlerCreateUser(req, res)).catch(next);
 });
+app.post('/api/login', (req, res, next) => {
+  Promise.resolve(handlerLogin(req, res)).catch(next);
+});
+
+app.use(middlewareHandleErrors);
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);

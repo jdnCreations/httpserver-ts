@@ -21,3 +21,9 @@ export class ForbiddenError extends Error {
     super(message);
   }
 }
+
+export class ConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
