@@ -11,11 +11,16 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { handlerAdminMetrics, handlerReset } from './handlers/admin.js';
 import {
   handlerCreateChirp,
+  handlerDeleteChirp,
   handlerGetChirpById,
   handlerGetChirps,
 } from './handlers/chirps.js';
 import { handlerReadiness } from './handlers/health.js';
-import { handlerCreateUser, handlerLogin } from './handlers/users.js';
+import {
+  handlerCreateUser,
+  handlerLogin,
+  handlerUpdateUser,
+} from './handlers/users.js';
 import { handlerRevokeRefreshToken } from './handlers/refresh_tokens.js';
 import { handlerRefresh } from './handlers/access_tokens.js';
 
@@ -43,6 +48,9 @@ app.get('/api/chirps/:chirpID', (req, res, next) => {
 app.post('/api/chirps', (req, res, next) => {
   Promise.resolve(handlerCreateChirp(req, res)).catch(next);
 });
+app.delete('/api/chirps/:chirpID', (req, res, next) => {
+  Promise.resolve(handlerDeleteChirp(req, res)).catch(next);
+});
 
 // ADMIN
 app.post('/admin/reset', (req, res, next) => {
@@ -58,6 +66,9 @@ app.post('/api/users', (req, res, next) => {
 });
 app.post('/api/login', (req, res, next) => {
   Promise.resolve(handlerLogin(req, res)).catch(next);
+});
+app.put('/api/users', (req, res, next) => {
+  Promise.resolve(handlerUpdateUser(req, res)).catch(next);
 });
 
 // TOKENS

@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
-import { createUser, getUserByEmail } from '../db/queries/users.js';
+import {
+  createUser,
+  getUserByEmail,
+  getUserFromRefreshToken,
+  updateUser,
+} from '../db/queries/users.js';
 import {
   BadRequestError,
   ConflictError,
@@ -7,9 +12,11 @@ import {
 } from '../errors.js';
 import {
   checkPasswordHash,
+  getBearerToken,
   hashPassword,
   makeJWT,
   makeRefreshToken,
+  validateJWT,
 } from '../auth/auth.js';
 import { config } from '../config.js';
 
@@ -87,4 +94,29 @@ export async function handlerLogin(req: Request, res: Response) {
       throw new UnauthorizedError('incorrect email or password');
     }
   }
+}
+
+export async function handlerUpdateUser(req: Request, res: Response) {
+  type parameters = {
+    password: string;
+    email: string;
+  };
+  const params: parameters = req.body;
+  const bearer = getBearerToken(req);
+  const userId = validateJWT(bearer, config.secret);
+
+  const hashedPassword = await hashPassword(params.password);
+
+  const updatedUser = await updateUser({
+    id: userId,
+    email: params.email,
+    hashedPassword: hashedPassword,
+  });
+
+  res.status(200).json({
+    id: updatedUser.id,
+    createdAt: updatedUser.createdAt,
+    updatedAt: updatedUser.updatedAt,
+    email: updatedUser.email,
+  });
 }

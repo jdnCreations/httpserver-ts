@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
-import { BadRequestError } from '../errors.js';
+import { BadRequestError, ForbiddenError } from '../errors.js';
 import { replaceProfaneWords } from '../utils/profanity.js';
 import {
   createChirp,
+  deleteChirpById,
   getAllChirps,
   getChirpById,
 } from '../db/queries/chirps.js';
@@ -46,11 +47,39 @@ export async function handlerGetChirps(req: Request, res: Response) {
 }
 
 export async function handlerGetChirpById(req: Request, res: Response) {
-  try {
-    const id = req.params.chirpID;
-    const chirp = await getChirpById(id);
-    res.status(200).json(chirp);
-  } catch {
-    res.status(404);
+  const id = req.params.chirpID;
+  const chirp = await getChirpById(id);
+  if (!chirp) {
+    res.status(404).send();
+    return;
   }
+  res.status(200).json(chirp);
+}
+
+export async function handlerDeleteChirp(req: Request, res: Response) {
+  const id = req.params.chirpID;
+  // check if user is authenticated
+  const token = getBearerToken(req);
+  const userId = validateJWT(token, config.secret);
+  if (!userId) {
+    res.status(403).send();
+    return;
+  }
+
+  // check if chirp exists
+  const chirp = await getChirpById(id);
+
+  // if there is no chirp wih that id
+  if (!chirp) {
+    res.status(404).send();
+    return;
+  }
+
+  if (chirp.userId === userId) {
+    await deleteChirpById(id);
+    res.status(204).send();
+    return;
+  }
+
+  res.status(403).send();
 }
