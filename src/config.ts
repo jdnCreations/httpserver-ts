@@ -19,16 +19,19 @@ type APIConfig = {
   secret: string;
   fileserverHits: number;
   db: DBConfig;
+  polka: string;
 };
 
 const dbUrl = envOrThrow('DB_URL');
 const platform = envOrThrow('PLATFORM');
 const secret = envOrThrow('SECRET');
+const polka = envOrThrow('POLKA_KEY');
 
 export const config: APIConfig = {
   fileserverHits: 0,
   platform: platform,
   secret: secret,
+  polka: polka,
   db: {
     url: dbUrl,
     migrationConfig: {

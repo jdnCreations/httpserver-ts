@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   checkPasswordHash,
+  getAPIKey,
   getBearerToken,
   hashPassword,
   makeJWT,
@@ -84,5 +85,43 @@ describe('Invalid Bearer Token', () => {
 
   it('should give us error', () => {
     expect(() => getBearerToken(req)).toThrowError();
+  });
+});
+
+describe('Get API Key', () => {
+  const req: Request = {
+    headers: {
+      authorization: 'ApiKey bilbo',
+    },
+    get: (headerName: string) => {
+      if (headerName.toLowerCase() === 'authorization') {
+        return 'ApiKey bilbo';
+      }
+      return undefined;
+    },
+  } as unknown as Request;
+
+  const apiKey = getAPIKey(req);
+
+  it('should give us bilbo', () => {
+    expect(apiKey).toBe('bilbo');
+  });
+});
+
+describe('Invalid API Key', () => {
+  const req: Request = {
+    headers: {
+      authorization: 'Be bilbo',
+    },
+    get: (headerName: string) => {
+      if (headerName.toLowerCase() === 'authorization') {
+        return 'Be bilbo';
+      }
+      return undefined;
+    },
+  } as unknown as Request;
+
+  it('should give us error', () => {
+    expect(() => getAPIKey(req)).toThrowError('invalid api key');
   });
 });

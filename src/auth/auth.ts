@@ -70,3 +70,15 @@ export function makeRefreshToken(userId: string): string {
   createRefreshToken(token, userId);
   return token;
 }
+
+export function getAPIKey(req: Request) {
+  if (
+    !req.get('authorization') ||
+    !req.get('authorization')?.includes('ApiKey ')
+  ) {
+    throw new UnauthorizedError('invalid api key');
+  }
+  const auth = req.get('authorization');
+  const apiKey = auth?.replace('ApiKey ', '');
+  return apiKey;
+}
