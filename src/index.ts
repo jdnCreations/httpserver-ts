@@ -23,6 +23,7 @@ import {
 } from './handlers/users.js';
 import { handlerRevokeRefreshToken } from './handlers/refresh_tokens.js';
 import { handlerRefresh } from './handlers/access_tokens.js';
+import { handlerPolkaEvent } from './handlers/polka.js';
 
 const app = express();
 const PORT = 8080;
@@ -69,6 +70,9 @@ app.post('/api/login', (req, res, next) => {
 });
 app.put('/api/users', (req, res, next) => {
   Promise.resolve(handlerUpdateUser(req, res)).catch(next);
+});
+app.post('/api/polka/webhooks', (req, res, next) => {
+  Promise.resolve(handlerPolkaEvent(req, res)).catch(next);
 });
 
 // TOKENS

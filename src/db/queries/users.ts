@@ -45,3 +45,16 @@ export async function updateUser(user: {
     .returning();
   return result;
 }
+
+export async function upgradeToChirpyRed(userId: string) {
+  const [user] = await db.select().from(users).where(eq(users.id, userId));
+  if (!user) {
+    return false;
+  }
+  const [result] = await db
+    .update(users)
+    .set({ isChirpyRed: true })
+    .where(eq(users.id, userId))
+    .returning();
+  return result.isChirpyRed;
+}

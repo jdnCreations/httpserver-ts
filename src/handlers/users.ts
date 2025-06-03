@@ -1,10 +1,5 @@
 import { Request, Response } from 'express';
-import {
-  createUser,
-  getUserByEmail,
-  getUserFromRefreshToken,
-  updateUser,
-} from '../db/queries/users.js';
+import { createUser, getUserByEmail, updateUser } from '../db/queries/users.js';
 import {
   BadRequestError,
   ConflictError,
@@ -19,6 +14,9 @@ import {
   validateJWT,
 } from '../auth/auth.js';
 import { config } from '../config.js';
+import { NewUser } from '../db/schema.js';
+
+type UserWithoutPassword = Omit<NewUser, 'hashedPassword'>;
 
 function validEmail(email: string): boolean {
   const emailRegex = /[\w-\.]+@([\w-]+\.)[\w-]{2, 4}$/;
@@ -50,12 +48,14 @@ export async function handlerCreateUser(req: Request, res: Response) {
     if (!user) {
       throw new ConflictError('user with that email already exists');
     }
-    res.status(201).json({
+    const userResponse: UserWithoutPassword = {
       id: user.id,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       email: user.email,
-    });
+      isChirpyRed: user.isChirpyRed,
+    };
+    res.status(201).json(userResponse);
   } else {
     throw new BadRequestError('invalid email');
   }
@@ -75,17 +75,16 @@ export async function handlerLogin(req: Request, res: Response) {
       throw new UnauthorizedError('incorrect email or password');
     }
     const match = await checkPasswordHash(params.password, user.hashedPassword);
-
     if (match) {
       const hour = 60 * 60 * 1000;
-
+      const { hashedPassword, ...userWithoutPassword } = user;
       const accessToken = makeJWT(user.id, hour, config.secret);
       const refreshToken = makeRefreshToken(user.id);
-      let userResponse = {
-        id: user.id,
-        email: user.email,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+      let userResponse: UserWithoutPassword & {
+        token: string;
+        refreshToken: string;
+      } = {
+        ...userWithoutPassword,
         token: accessToken,
         refreshToken: refreshToken,
       };
