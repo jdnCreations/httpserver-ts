@@ -5,6 +5,7 @@ import {
   createChirp,
   deleteChirpById,
   getAllChirps,
+  getAllChirpsForAuthor,
   getChirpById,
 } from '../db/queries/chirps.js';
 import { getBearerToken, validateJWT } from '../auth/auth.js';
@@ -38,12 +39,34 @@ export async function handlerCreateChirp(req: Request, res: Response) {
 }
 
 export async function handlerGetChirps(req: Request, res: Response) {
-  try {
-    const chirps = await getAllChirps();
-    res.status(200).json(chirps);
-  } catch {
-    res.status(500).json({ error: 'could not get all chirps' });
+  let authorId = '';
+  let authorIdQuery = req.query.authorId;
+  let sortQuery = req.query.sort;
+  if (typeof authorIdQuery === 'string') {
+    authorId = authorIdQuery;
   }
+
+  let chirps = [];
+
+  if (authorId) {
+    chirps = await getAllChirpsForAuthor(authorId);
+  } else {
+    chirps = await getAllChirps();
+  }
+
+  if (typeof sortQuery === 'string') {
+    if (sortQuery === 'desc') {
+      // sort chirps desc
+      chirps.sort((a, b) => {
+        return b.createdAt.valueOf() - a.createdAt.valueOf();
+      });
+    } else {
+      chirps.sort((a, b) => {
+        return a.createdAt.valueOf() - b.createdAt.valueOf();
+      });
+    }
+  }
+  res.status(200).json(chirps);
 }
 
 export async function handlerGetChirpById(req: Request, res: Response) {

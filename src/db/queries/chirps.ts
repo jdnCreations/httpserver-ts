@@ -16,6 +16,15 @@ export async function getAllChirps() {
   return results;
 }
 
+export async function getAllChirpsForAuthor(authorId: string) {
+  const results = await db
+    .select()
+    .from(chirps)
+    .orderBy(asc(chirps.createdAt))
+    .where(eq(chirps.userId, authorId));
+  return results;
+}
+
 export async function getChirpById(chirpId: string) {
   const [result] = await db.select().from(chirps).where(eq(chirps.id, chirpId));
   return result;
